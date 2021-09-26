@@ -1,0 +1,42 @@
+import numpy as np
+import pandas as pd
+from sklearn.tree import DecisionTreeClassifier
+from sklearn.ensemble import RandomForestClassifier
+from sklearn.preprocessing import MinMaxScaler
+from sklearn.model_selection import train_test_split
+from sklearn.metrics import accuracy_score
+
+def normalization(data):
+    scaler = MinMaxScaler()
+    columns = ['age', 'fnlwgt', 'educational-num', 'capital-gain', 'capital-loss', 'hours-per-week']
+    features_minmax_transform = pd.DataFrame(data=data[columns])
+    features_minmax_transform[columns] = scaler.fit_transform(data[columns])
+    return features_minmax_transform
+def predictSalary():
+    data = pd.read_csv("C:\\Users\\User\\Downloads\\train.csv")
+    #data = pd.read_csv("train.csv")
+    n_records = data.shape[0]
+    n_greaterthan_50k = data[data['income_>50K'] == '1'].shape[0]
+    n_less_than_50k = n_records - n_greaterthan_50k
+    feature_log_transform = normalization(data)
+    feature_final = pd.get_dummies(feature_log_transform)
+    income = data['income_>50K']
+    X_train, X_test, y_train, y_test = train_test_split(feature_final, income, test_size=0.2, random_state=0)
+    clf = DecisionTreeClassifier(max_depth=10)
+    clf = clf.fit(X_train,y_train)
+    y_pred = clf.predict(X_test)
+    accuracy = accuracy_score(y_test, y_pred, normalize=True, sample_weight=None)
+    print(accuracy)
+    test_data = pd.read_csv("C:\\Users\\User\\Downloads\\test.csv")
+    feature_log_transform_test = normalization(test_data)
+    feature_final_test = pd.get_dummies(feature_log_transform_test)
+    print(feature_final_test)
+    test_pred = clf.predict(feature_final_test)
+    print(test_pred)
+    df = pd.DataFrame(data=test_pred, columns=['income'])
+    print(df)
+    df.to_csv("result.csv")
+
+
+if __name__ == '__main__':
+    predictSalary()
